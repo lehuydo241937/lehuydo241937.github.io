@@ -14,7 +14,22 @@ const blog = defineCollection({
 			pubDate: z.coerce.date(),
 			updatedDate: z.coerce.date().optional(),
 			heroImage: z.optional(image()),
+			tags: z.array(z.string()).default([]),
 		}),
 });
 
-export const collections = { blog };
+const articles = defineCollection({
+	// Load Markdown and MDX files in the `src/content/articles/` directory.
+	loader: glob({ base: './src/content/articles', pattern: '**/*.{md,mdx}' }),
+	schema: ({ image }) =>
+		z.object({
+			title: z.string(),
+			description: z.string(),
+			pubDate: z.coerce.date(),
+			updatedDate: z.coerce.date().optional(),
+			heroImage: z.optional(image()),
+			tags: z.array(z.string()).default([]),
+		}),
+});
+
+export const collections = { blog, articles };

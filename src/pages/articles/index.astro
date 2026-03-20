@@ -6,7 +6,7 @@ import FormattedDate from '../../components/FormattedDate.astro';
 import Header from '../../components/Header.astro';
 import { SITE_DESCRIPTION, SITE_TITLE } from '../../consts';
 
-const posts = (await getCollection('blog')).sort(
+const articles = (await getCollection('articles')).sort(
 	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
 );
 ---
@@ -14,7 +14,7 @@ const posts = (await getCollection('blog')).sort(
 <!doctype html>
 <html lang="en">
 	<head>
-		<BaseHead title={`Blog | ${SITE_TITLE}`} description={SITE_DESCRIPTION} />
+		<BaseHead title={`Articles | ${SITE_TITLE}`} description={SITE_DESCRIPTION} />
 	</head>
 	<body class="bg-background text-on-surface font-body selection:bg-primary-container selection:text-on-primary-container">
 		<Header />
@@ -22,35 +22,35 @@ const posts = (await getCollection('blog')).sort(
 			<section class="max-w-screen-2xl mx-auto mb-32">
 				<div class="flex flex-col md:flex-row justify-between items-end mb-16">
 					<div>
-						<h1 class="font-headline text-5xl font-extrabold tracking-tight text-on-background mb-4">Blog</h1>
-						<p class="text-secondary max-w-md">Technical deep-dives and research notes on digital systems.</p>
+						<h1 class="font-headline text-5xl font-extrabold tracking-tight text-on-background mb-4">Articles</h1>
+						<p class="text-secondary max-w-md">In-depth technical analysis and long-form editorial content.</p>
 					</div>
 				</div>
 				<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-16 gap-x-12">
 					{
-						posts.map((post) => (
+						articles.map((article) => (
 							<article class="group">
-								<a href={`/blog/${post.id}/`} class="no-underline">
+								<a href={`/articles/${article.id}/`} class="no-underline">
 									<div class="aspect-[4/5] bg-surface-container overflow-hidden rounded-lg mb-8">
-										{post.data.heroImage && (
+										{article.data.heroImage && (
 											<img 
-												src={post.data.heroImage.src || post.data.heroImage} 
-												alt={post.data.title} 
+												src={article.data.heroImage.src || article.data.heroImage} 
+												alt={article.data.title} 
 												class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
 											/>
 										)}
 									</div>
 									<span class="font-label text-[0.65rem] uppercase tracking-widest text-primary mb-4 block">
-										{post.data.tags?.[0] || 'Post'}
+										{article.data.tags?.[0] || 'Article'}
 									</span>
 									<h3 class="font-headline text-xl font-bold tracking-tight text-on-background group-hover:text-primary transition-colors cursor-pointer mb-4">
-										{post.data.title}
+										{article.data.title}
 									</h3>
 									<p class="text-sm text-on-surface-variant leading-relaxed line-clamp-3">
-										{post.data.description}
+										{article.data.description}
 									</p>
 									<p class="text-[10px] uppercase tracking-widest text-secondary mt-4 font-label">
-										<FormattedDate date={post.data.pubDate} />
+										<FormattedDate date={article.data.pubDate} />
 									</p>
 								</a>
 							</article>

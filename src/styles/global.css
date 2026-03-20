@@ -1,127 +1,65 @@
-/*
-  The CSS in this style tag is based off of Bear Blog's default CSS.
-  https://github.com/HermanMartinus/bearblog/blob/297026a877bc2ab2b3bdfbd6b9f7961c350917dd/templates/styles/blog/default.css
-  License MIT: https://github.com/HermanMartinus/bearblog/blob/master/LICENSE.md
- */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-:root {
-	--white: #FFFFFF;
-	--black: #1A1A1A;
-	--gray-light: #F0F0F0;
-	--dot-size: 1px;
-	--dot-space: 30px;
+@layer base {
+	:root {
+		--background: #f8f9fa;
+		--on-background: #2b3437;
+		--primary: #485f84;
+		--on-primary: #f6f7ff;
+		--secondary: #5e5f60;
+		--surface-container-low: #f1f4f6;
+		--gray-light: #F0F0F0;
+	}
+
+	body {
+		@apply bg-background text-on-background font-body selection:bg-primary-container selection:text-on-primary-container;
+		margin: 0;
+		padding: 0;
+	}
+
+	h1, h2, h3, h4, h5, h6 {
+		@apply font-headline font-extrabold tracking-tight text-on-background;
+	}
 }
 
-@font-face {
-	font-family: 'Outfit';
-	src: url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap');
+@layer components {
+	.material-symbols-outlined {
+		font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+		vertical-align: middle;
+	}
+	
+	.reading-progress-bar {
+		position: fixed;
+		top: 0;
+		left: 0;
+		height: 2px;
+		width: 0%; /* Initial width */
+		background-color: #485f84;
+		z-index: 9999;
+	}
+	
+	.editorial-grid {
+		display: grid;
+		grid-template-columns: repeat(12, 1fr);
+		gap: 2rem;
+	}
 }
 
-@font-face {
-	font-family: 'EB Garamond';
-	src: url('https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;600&display=swap');
+/* Base styles for prose content if needed */
+.prose {
+	@apply leading-relaxed text-on-surface-variant;
 }
 
-body {
-	font-family: "Outfit", system-ui, -apple-system, sans-serif;
-	font-weight: 300;
-	margin: 0;
-	padding: 0;
-	text-align: left;
-	background-color: var(--white);
-	background-image: radial-gradient(var(--gray-light) var(--dot-size), transparent var(--dot-size));
-	background-size: var(--dot-space) var(--dot-space);
-	word-wrap: break-word;
-	overflow-wrap: break-word;
-	color: var(--black);
-	font-size: 1.125rem;
-	line-height: 1.6;
-}
-
-main {
-	width: 100%;
-	max-width: 700px;
-	margin: auto;
-	padding: 4rem 1.5rem;
-}
-
-h1, h2, h3, h4, h5, h6 {
-	font-family: "EB Garamond", serif;
-	font-weight: 600;
-	margin: 0 0 1rem 0;
-	color: var(--black);
-	line-height: 1.2;
-}
-
-h1 { font-size: 3rem; margin-bottom: 2rem; }
-h2 { font-size: 2.25rem; margin-top: 2rem; }
-h3 { font-size: 1.75rem; }
-
-a {
-	color: var(--black);
-	text-decoration: underline;
-	text-underline-offset: 4px;
-	text-decoration-thickness: 1px;
-	transition: opacity 0.2s ease;
-}
-
-a:hover {
-	opacity: 0.6;
-}
-
-p {
-	margin-bottom: 1.5rem;
+.prose h1, .prose h2, .prose h3 {
+	@apply mt-8 mb-4;
 }
 
 .prose p {
-	margin-bottom: 1.5rem;
+	@apply mb-6;
 }
 
-img {
-	max-width: 100%;
-	height: auto;
-	border: 1px solid var(--gray-light);
-}
-
-code {
-	padding: 2px 4px;
-	background-color: var(--gray-light);
-	font-size: 0.9em;
-}
-
-pre {
-	padding: 1.5rem;
-	background-color: var(--black) !important;
-	color: var(--white) !important;
-	overflow-x: auto;
-}
-
-pre > code {
-	all: unset;
-}
-
-hr {
-	border: none;
-	border-top: 1px solid var(--gray-light);
-	margin: 3rem 0;
-}
-
-@media (max-width: 700px) {
-	body {
-		font-size: 1rem;
-	}
-	main {
-		padding: 2rem 1rem;
-	}
-}
-
-.sr-only {
-	position: absolute;
-	width: 1px;
-	height: 1px;
-	padding: 0;
-	margin: -1px;
-	overflow: hidden;
-	clip: rect(0, 0, 0, 0);
-	border: 0;
+.prose img {
+	@apply rounded-lg my-8;
 }
