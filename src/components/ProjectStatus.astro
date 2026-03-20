@@ -1,0 +1,80 @@
+---
+interface Project {
+	name: string;
+	status: 'In Progress' | 'Completed' | 'Researching' | 'On Hold';
+	progress: number;
+}
+
+const projects: Project[] = [
+	{ name: 'Procedural Terrain Engine', status: 'In Progress', progress: 65 },
+	{ name: 'AI Combat System', status: 'Researching', progress: 30 },
+	{ name: 'Quest Logic Framework', status: 'On Hold', progress: 10 },
+];
+---
+
+<div class="project-status">
+	<h2>Project Status</h2>
+	<div class="project-list">
+		{projects.map((project) => (
+			<div class="project-item">
+				<div class="project-info">
+					<span class="project-name">{project.name}</span>
+					<span class={`status-tag ${project.status.toLowerCase().replace(' ', '-')}`}>{project.status}</span>
+				</div>
+				<div class="progress-bar-container">
+					<div class="progress-bar" style={`width: ${project.progress}%`}></div>
+				</div>
+				<div class="progress-label">{project.progress}%</div>
+			</div>
+		))}
+	</div>
+</div>
+
+<style>
+	.project-status {
+		margin: 4rem 0;
+	}
+	.project-list {
+		display: flex;
+		flex-direction: column;
+		gap: 1.5rem;
+	}
+	.project-item {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+	.project-info {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+	}
+	.project-name {
+		font-family: "EB Garamond", serif;
+		font-size: 1.25rem;
+		font-weight: 600;
+	}
+	.status-tag {
+		font-size: 0.75rem;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		padding: 2px 8px;
+		border: 1px solid var(--black);
+		font-weight: 600;
+	}
+	.progress-bar-container {
+		width: 100%;
+		height: 4px;
+		background-color: var(--gray-light);
+	}
+	.progress-bar {
+		height: 100%;
+		background-color: var(--black);
+		transition: width 0.5s ease-out;
+	}
+	.progress-label {
+		font-size: 0.75rem;
+		opacity: 0.6;
+		text-align: right;
+	}
+</style>
