@@ -8,8 +8,7 @@ import { SITE_DESCRIPTION, SITE_TITLE } from '../../consts';
 
 export async function getStaticPaths() {
 	const blogPosts = await getCollection('blog');
-	const articles = await getCollection('articles');
-	const allContent = [...blogPosts, ...articles];
+	const allContent = blogPosts;
 	
 	const tags = [...new Set(allContent.map((item) => item.data.tags || []).flat())];
 	
@@ -20,9 +19,7 @@ export async function getStaticPaths() {
 }
 
 const { tag } = Astro.props;
-const blogPosts = await getCollection('blog');
-const articles = await getCollection('articles');
-const allContent = [...blogPosts, ...articles]
+const allContent = (await getCollection('blog'))
 	.filter((item) => (item.data.tags || []).includes(tag))
 	.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 ---
@@ -49,8 +46,8 @@ const allContent = [...blogPosts, ...articles]
 					{
 						allContent.map((item) => (
 							<article class="group">
-								<a href={item.collection === 'blog' ? `/blog/${item.id}/` : `/articles/${item.id}/`} class="no-underline">
-									<div class="aspect-[4/5] bg-surface-container overflow-hidden rounded-lg mb-8">
+								<a href={`/blog/${item.id}/`} class="no-underline">
+									<div class="aspect-[16/9] bg-surface-container overflow-hidden rounded-lg mb-8">
 										{item.data.heroImage && (
 											<img 
 												src={item.data.heroImage?.src || item.data.heroImage} 
@@ -60,7 +57,7 @@ const allContent = [...blogPosts, ...articles]
 										)}
 									</div>
 									<span class="font-label text-[0.65rem] uppercase tracking-widest text-primary mb-4 block">
-										{item.collection.slice(0, -1)} <!-- 'blog' or 'article' -->
+										Perspective
 									</span>
 									<h3 class="font-headline text-xl font-bold tracking-tight text-on-background group-hover:text-primary transition-colors cursor-pointer mb-4">
 										{item.data.title}
