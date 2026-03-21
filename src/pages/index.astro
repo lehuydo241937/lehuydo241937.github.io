@@ -24,11 +24,11 @@ const recentPosts = blogPosts.slice(1, 4);
 		<Header />
 		<main class="pt-40">
 			<!-- Hero Section -->
-			<section class="max-w-screen-2xl mx-auto px-12 mb-32">
+			<section class="max-w-screen-2xl mx-auto px-6 md:px-12 mb-20 md:mb-32">
 				<div class="editorial-grid">
 					<div class="col-span-12 md:col-span-8 lg:col-span-10">
 						<span class="font-label text-xs uppercase tracking-[0.2em] text-secondary mb-6 block">Curated Thoughts & Technical Analysis</span>
-						<h1 class="font-headline text-5xl md:text-7xl font-extrabold tracking-tighter text-on-background leading-[1.1] mb-8">
+						<h1 class="font-headline text-4xl md:text-7xl font-extrabold tracking-tighter text-on-background leading-[1.1] mb-6 md:mb-8">
 							Exploring the Intersection of <span class="text-primary italic">AI, Games,</span> and <span class="text-primary italic">Data</span>.
 						</h1>
 						<p class="text-lg md:text-xl text-on-surface-variant max-w-2xl leading-relaxed mb-10">
@@ -49,7 +49,7 @@ const recentPosts = blogPosts.slice(1, 4);
 			<!-- Featured Post Section -->
 			{featuredPost && (
 				<section class="bg-surface-container-low py-32 mb-32">
-					<div class="max-w-screen-2xl mx-auto px-12">
+					<div class="max-w-screen-2xl mx-auto px-6 md:px-12">
 						<div class="editorial-grid items-center">
 							<div class="col-span-12 lg:col-span-7 relative group cursor-pointer">
 								<a href={`/blog/${featuredPost.id}/`}>
@@ -90,7 +90,7 @@ const recentPosts = blogPosts.slice(1, 4);
 			)}
 
 			<!-- Recent Articles Grid -->
-			<section class="max-w-screen-2xl mx-auto px-12 mb-32">
+			<section class="max-w-screen-2xl mx-auto px-6 md:px-12 mb-20 md:mb-32">
 				<div class="flex flex-col md:flex-row justify-between items-end mb-16">
 					<div>
 						<h2 class="font-headline text-4xl font-extrabold tracking-tight text-on-background mb-4">Recent Perspectives</h2>
@@ -127,8 +127,8 @@ const recentPosts = blogPosts.slice(1, 4);
 			</section>
 
 			<!-- Subscription Form -->
-			<section class="max-w-screen-2xl mx-auto px-12 mb-32">
-				<div class="bg-surface-container-high rounded-xl p-16 md:p-24 flex flex-col items-center text-center">
+			<section class="max-w-screen-2xl mx-auto px-6 md:px-12 mb-20 md:mb-32">
+				<div class="bg-surface-container-high rounded-xl p-8 md:p-24 flex flex-col items-center text-center">
 					<span class="font-label text-xs uppercase tracking-[0.3em] text-secondary mb-8">Stay Updated</span>
 					<h2 class="font-headline text-3xl md:text-5xl font-extrabold tracking-tight text-on-background mb-8 max-w-2xl">
 						Join 12,000+ researchers and developers receiving weekly insights.
