@@ -113,7 +113,7 @@ const posts = (await getCollection('blog')).sort(
 
 			function filterPosts() {
 				const searchTerm = searchInput.value.toLowerCase();
-				const selectedTag = tagFilter.value;
+				const selectedTag = tagFilter.value.toLowerCase();
 				const selectedTime = timeFilter.value;
 				const now = new Date();
 				
