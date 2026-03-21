@@ -53,7 +53,7 @@ const allContent = [...blogPosts, ...articles]
 									<div class="aspect-[4/5] bg-surface-container overflow-hidden rounded-lg mb-8">
 										{item.data.heroImage && (
 											<img 
-												src={item.data.heroImage.src || item.data.heroImage} 
+												src={item.data.heroImage?.src || item.data.heroImage} 
 												alt={item.data.title} 
 												class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
 											/>

@@ -34,7 +34,7 @@ const articles = (await getCollection('articles')).sort(
 									<div class="aspect-[4/5] bg-surface-container overflow-hidden rounded-lg mb-8">
 										{article.data.heroImage && (
 											<img 
-												src={article.data.heroImage.src || article.data.heroImage} 
+												src={article.data.heroImage?.src || article.data.heroImage} 
 												alt={article.data.title} 
 												class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
 											/>
