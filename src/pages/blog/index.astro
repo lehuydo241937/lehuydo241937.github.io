@@ -4,6 +4,7 @@ import BaseHead from '../../components/BaseHead.astro';
 import Footer from '../../components/Footer.astro';
 import FormattedDate from '../../components/FormattedDate.astro';
 import Header from '../../components/Header.astro';
+import MusicPlayer from '../../components/MusicPlayer.astro';
 import { SITE_DESCRIPTION, SITE_TITLE } from '../../consts';
 
 const posts = (await getCollection('blog')).sort(
@@ -103,81 +104,87 @@ const posts = (await getCollection('blog')).sort(
 		</main>
 
 		<script>
-			const searchInput = document.getElementById('search-input');
-			const tagFilter = document.getElementById('tag-filter');
-			const timeFilter = document.getElementById('time-filter');
-			const postsGrid = document.getElementById('posts-grid');
-			const emptyState = document.getElementById('empty-state');
-			const resetBtn = document.getElementById('reset-filters');
-			const postCards = document.querySelectorAll('.post-card');
+			document.addEventListener('astro:page-load', () => {
+				const searchInput = document.getElementById('search-input') as HTMLInputElement;
+				const tagFilter = document.getElementById('tag-filter') as HTMLSelectElement;
+				const timeFilter = document.getElementById('time-filter') as HTMLSelectElement;
+				const postsGrid = document.getElementById('posts-grid');
+				const emptyState = document.getElementById('empty-state');
+				const resetBtn = document.getElementById('reset-filters');
+				const postCards = document.querySelectorAll('.post-card');
 
-			function filterPosts() {
-				const searchTerm = searchInput.value.toLowerCase();
-				const selectedTag = tagFilter.value.toLowerCase();
-				const selectedTime = timeFilter.value;
-				const now = new Date();
-				
-				let visibleCount = 0;
+				if (!searchInput) return;
 
-				postCards.forEach(card => {
-					const title = card.dataset.title;
-					const description = card.dataset.description;
-					const tags = card.dataset.tags.split(',');
-					const pubDate = new Date(card.dataset.pubdate);
+				function filterPosts() {
+					const searchTerm = searchInput.value.toLowerCase();
+					const selectedTag = tagFilter.value.toLowerCase();
+					const selectedTime = timeFilter.value;
+					const now = new Date();
 					
-					// Search match
-					const matchesSearch = title.includes(searchTerm) || description.includes(searchTerm);
-					
-					// Tag match
-					const matchesTag = selectedTag === 'all' || tags.includes(selectedTag);
-					
-					// Time match
-					let matchesTime = true;
-					if (selectedTime !== 'all') {
-						const diffMs = now.getTime() - pubDate.getTime();
-						const diffDays = diffMs / (1000 * 60 * 60 * 24);
+					let visibleCount = 0;
+
+					postCards.forEach((c) => {
+						const card = c as HTMLElement;
+						const title = card.dataset.title || "";
+						const description = card.dataset.description || "";
+						const tags = (card.dataset.tags || "").split(',');
+						const pubDate = new Date(card.dataset.pubdate || "");
 						
-						if (selectedTime === 'today') {
-							matchesTime = pubDate.toDateString() === now.toDateString();
-						} else if (selectedTime === 'yesterday') {
-							const yesterday = new Date(now);
-							yesterday.setDate(now.getDate() - 1);
-							matchesTime = pubDate.toDateString() === yesterday.toDateString();
-						} else if (selectedTime === 'week') {
-							matchesTime = diffDays <= 7;
-						} else if (selectedTime === 'month') {
-							matchesTime = diffDays <= 30;
+						// Search match
+						const matchesSearch = title.includes(searchTerm) || description.includes(searchTerm);
+						
+						// Tag match
+						const matchesTag = selectedTag === 'all' || tags.includes(selectedTag);
+						
+						// Time match
+						let matchesTime = true;
+						if (selectedTime !== 'all') {
+							const diffMs = now.getTime() - pubDate.getTime();
+							const diffDays = diffMs / (1000 * 60 * 60 * 24);
+							
+							if (selectedTime === 'today') {
+								matchesTime = pubDate.toDateString() === now.toDateString();
+							} else if (selectedTime === 'yesterday') {
+								const yesterday = new Date(now);
+								yesterday.setDate(now.getDate() - 1);
+								matchesTime = pubDate.toDateString() === yesterday.toDateString();
+							} else if (selectedTime === 'week') {
+								matchesTime = diffDays <= 7;
+							} else if (selectedTime === 'month') {
+								matchesTime = diffDays <= 30;
+							}
 						}
-					}
-					
-					if (matchesSearch && matchesTag && matchesTime) {
-						card.style.display = 'block';
-						visibleCount++;
+						
+						if (matchesSearch && matchesTag && matchesTime) {
+							card.style.display = 'block';
+							visibleCount++;
+						} else {
+							card.style.display = 'none';
+						}
+					});
+
+					if (visibleCount === 0) {
+						postsGrid?.classList.add('hidden');
+						emptyState?.classList.remove('hidden');
 					} else {
-						card.style.display = 'none';
+						postsGrid?.classList.remove('hidden');
+						emptyState?.classList.add('hidden');
 					}
-				});
-
-				if (visibleCount === 0) {
-					postsGrid.classList.add('hidden');
-					emptyState.classList.remove('hidden');
-				} else {
-					postsGrid.classList.remove('hidden');
-					emptyState.classList.add('hidden');
 				}
-			}
 
-			searchInput.addEventListener('input', filterPosts);
-			tagFilter.addEventListener('change', filterPosts);
-			timeFilter.addEventListener('change', filterPosts);
-			
-			resetBtn.addEventListener('click', () => {
-				searchInput.value = '';
-				tagFilter.value = 'all';
-				timeFilter.value = 'all';
-				filterPosts();
+				searchInput.addEventListener('input', filterPosts);
+				tagFilter.addEventListener('change', filterPosts);
+				timeFilter.addEventListener('change', filterPosts);
+				
+				resetBtn?.addEventListener('click', () => {
+					searchInput.value = '';
+					tagFilter.value = 'all';
+					timeFilter.value = 'all';
+					filterPosts();
+				});
 			});
 		</script>
 		<Footer />
+		<MusicPlayer />
 	</body>
 </html>

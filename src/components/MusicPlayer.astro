@@ -1,0 +1,140 @@
+---
+const playlists = [
+  { name: 'Lofi Focus', id: 'PLofht4PTcKYnaH8w5olJCG-WtCHVkUSOW' },
+  { name: 'Synthwave Archive', id: 'PLW1x9MvymQ4J62Z24W7E99AIti67qUv9D' },
+  { name: 'Piano & Strings', id: 'PL2D2EEBAA1856CB63' }
+];
+---
+
+<div id="global-music-player" transition:persist="music-player" class="fixed bottom-6 right-6 z-[100] bg-surface-container-highest/80 dark:bg-slate-800/80 backdrop-blur-xl px-2 py-2 rounded-full shadow-lg border border-outline/10 flex items-center gap-2 max-w-[240px]">
+  <div id="youtube-player" class="hidden w-0 h-0"></div>
+
+  <button id="music-toggle" class="text-on-surface hover:text-primary transition-colors flex items-center justify-center w-10 h-10 rounded-full bg-background/50 hover:bg-background shrink-0">
+    <span class="material-symbols-outlined text-xl" id="music-icon">play_arrow</span>
+  </button>
+  
+  <div class="flex-1 min-w-0 pr-2">
+    <select id="music-playlist-select" class="w-full bg-transparent text-xs font-headline font-bold text-on-surface uppercase tracking-widest outline-none border-none cursor-pointer truncate custom-select appearance-none">
+      {playlists.map(p => (
+        <option value={p.id}>{p.name}</option>
+      ))}
+    </select>
+  </div>
+</div>
+
+<style>
+  .custom-select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22currentColor%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E");
+    background-repeat: no-repeat;
+    background-position: right 2px center;
+    background-size: 12px;
+    padding-right: 16px;
+  }
+</style>
+
+<script is:inline>
+  // Expose youtube callback to global scope so it's only defined once
+  if (!window.onYouTubeIframeAPIReady) {
+    window.onYouTubeIframeAPIReady = function() {
+      // Set flag so we know it loaded
+      window.isYTReady = true;
+      // Dispatch an event so any component instances can attach
+      window.dispatchEvent(new Event('yt-api-ready'));
+    };
+
+    const tag = document.createElement('script');
+    tag.src = "https://www.youtube.com/iframe_api";
+    const firstScriptTag = document.getElementsByTagName('script')[0];
+    if (firstScriptTag && firstScriptTag.parentNode) {
+      firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+    } else {
+      document.head.appendChild(tag);
+    }
+  }
+</script>
+
+<script>
+  // Standard module script (Astro executes this once across view transitions, but we hook into astro:page-load)
+  document.addEventListener('astro:page-load', () => {
+    const toggleBtn = document.getElementById('music-toggle');
+    const select = document.getElementById('music-playlist-select');
+    const icon = document.getElementById('music-icon');
+    const playerContainer = document.getElementById('youtube-player');
+    
+    if (!toggleBtn || !select || !playerContainer) return;
+
+    // Prevent re-initialization if the iframe inside playerContainer already exists (due to transition:persist)
+    // The playerContainer div gets replaced by an iframe by the YT API.
+    if (playerContainer.tagName.toLowerCase() === 'iframe') {
+      return; 
+    }
+
+    if (toggleBtn.hasAttribute('data-initialized')) return;
+    toggleBtn.setAttribute('data-initialized', 'true');
+    
+    let player;
+    let isPlaying = false;
+
+    const initPlayer = () => {
+      if (typeof window.YT === 'undefined' || !window.YT.Player) return;
+      
+      const initialPlaylist = select.value;
+      
+      player = new window.YT.Player('youtube-player', {
+        height: '0',
+        width: '0',
+        playerVars: {
+          listType: 'playlist',
+          list: initialPlaylist,
+          loop: 1,
+          autoplay: 0,
+          controls: 0,
+          disablekb: 1,
+          fs: 0,
+          modestbranding: 1,
+          rel: 0,
+          showinfo: 0,
+          iv_load_policy: 3
+        },
+        events: {
+          'onStateChange': (event) => {
+            if (event.data === window.YT.PlayerState.PLAYING) {
+              isPlaying = true;
+              if (icon) icon.innerText = 'pause';
+            } else if (event.data === window.YT.PlayerState.PAUSED || event.data === window.YT.PlayerState.ENDED) {
+              isPlaying = false;
+              if (icon) icon.innerText = 'play_arrow';
+            }
+          }
+        }
+      });
+
+      toggleBtn.addEventListener('click', () => {
+        if (!player || typeof player.playVideo !== 'function') return;
+        if (isPlaying) {
+          player.pauseVideo();
+        } else {
+          player.playVideo();
+        }
+      });
+
+      select.addEventListener('change', (e) => {
+        if (!player || typeof player.loadPlaylist !== 'function') return;
+        const playlistId = e.target.value;
+        player.loadPlaylist({
+          list: playlistId,
+          listType: 'playlist'
+        });
+      });
+    };
+
+    if (window.isYTReady && typeof window.YT !== 'undefined') {
+      initPlayer();
+    } else {
+      window.addEventListener('yt-api-ready', initPlayer);
+    }
+  });
+</script>
