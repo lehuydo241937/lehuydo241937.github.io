@@ -35,11 +35,8 @@ const recentPosts = blogPosts.slice(1, 4);
 							A digital editorial dedicated to the technical precision and intellectual depth required to navigate the future of computational systems and immersive experiences.
 						</p>
 						<div class="flex items-center gap-6">
-							<a href="/blog" class="bg-primary text-on-primary px-8 py-4 font-headline font-bold rounded-DEFAULT hover:opacity-90 transition-all no-underline">
+							<a href={`/blog/${blogPosts[0].id}/`} class="bg-primary text-on-primary px-8 py-4 font-headline font-bold rounded-DEFAULT hover:opacity-90 transition-all no-underline w-full sm:w-auto text-center">
 								Read Latest Analysis
-							</a>
-							<a class="text-on-surface font-headline font-bold border-b-2 border-primary pb-1 hover:text-primary transition-colors no-underline" href="/blog">
-								Explore Archive
 							</a>
 						</div>
 					</div>
