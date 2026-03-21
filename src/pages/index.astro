@@ -11,8 +11,22 @@ const blogPosts = (await getCollection('blog')).sort(
 	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
 );
 
-const featuredPost = blogPosts[0];
-const recentPosts = blogPosts.slice(1, 4);
+// Get all unique tags
+const allTags = [...new Set(blogPosts.flatMap(post => post.data.tags || []))];
+
+// Determine the top post per tag (sorted by "views" frontmatter, defaulting to pubDate fallback)
+const topPostsByTag = allTags.map(tag => {
+	const postsWithTag = blogPosts.filter(post => post.data.tags?.includes(tag));
+	const topPost = postsWithTag.sort((a, b) => {
+		const viewsA = (a.data as any).views || 0;
+		const viewsB = (b.data as any).views || 0;
+		if (viewsA !== viewsB) return viewsB - viewsA;
+		return b.data.pubDate.valueOf() - a.data.pubDate.valueOf();
+	})[0];
+	return { tag, post: topPost };
+});
+
+const recentPosts = blogPosts.slice(0, 3);
 ---
 
 <!doctype html>
@@ -43,44 +57,58 @@ const recentPosts = blogPosts.slice(1, 4);
 				</div>
 			</section>
 
-			<!-- Featured Post Section -->
-			{featuredPost && (
-				<section class="bg-surface-container-low py-32 mb-32">
+			<!-- Top Posts By Tag Section -->
+			{topPostsByTag.length > 0 && (
+				<section class="bg-surface-container-low py-20 mb-20 md:mb-32 overflow-hidden">
 					<div class="max-w-screen-2xl mx-auto px-6 md:px-12">
-						<div class="editorial-grid items-center">
-							<div class="col-span-12 lg:col-span-7 relative group cursor-pointer">
-								<a href={`/blog/${featuredPost.id}/`}>
-									<div class="aspect-[16/9] overflow-hidden rounded-lg bg-surface-container">
-										{featuredPost.data.heroImage && (
-											<img 
-												src={featuredPost.data.heroImage?.src || featuredPost.data.heroImage} 
-												alt={featuredPost.data.title} 
-												class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
-											/>
-										)}
+						<div class="mb-20 text-center">
+							<span class="font-label text-xs uppercase tracking-[0.2em] text-secondary mb-4 block">Essential Reading</span>
+							<h2 class="font-headline text-3xl md:text-5xl font-extrabold tracking-tight text-on-background">Most Viewed by Category</h2>
+						</div>
+						
+						<div class="flex flex-col gap-32">
+							{topPostsByTag.map(({ tag, post }, index) => {
+								const isEven = index % 2 !== 0;
+								return (
+								<div class="editorial-grid items-center relative">
+									<div class={`col-span-12 lg:col-span-7 relative group cursor-pointer ${isEven ? 'lg:order-2' : 'lg:order-1'}`}>
+										<a href={`/blog/${post.id}/`}>
+											<div class="aspect-[16/9] overflow-hidden rounded-lg bg-surface-container shadow-2xl">
+												{post.data.heroImage && (
+													<img 
+														src={post.data.heroImage?.src || post.data.heroImage} 
+														alt={post.data.title} 
+														class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
+													/>
+												)}
+											</div>
+										</a>
 									</div>
-								</a>
-							</div>
-							<div class="col-span-12 lg:col-span-5 lg:pl-12 mt-8 lg:mt-0">
-								<div class="flex items-center gap-4 mb-6">
-									<span class="font-label text-[0.65rem] uppercase tracking-widest bg-primary-container text-on-primary-container px-3 py-1 rounded-full">Featured</span>
-									<span class="font-label text-[0.65rem] uppercase tracking-widest text-secondary">
-										<FormattedDate date={featuredPost.data.pubDate} />
-									</span>
+									<div class={`col-span-12 lg:col-span-5 mt-10 lg:mt-0 ${isEven ? 'lg:pr-12 lg:order-1' : 'lg:pl-12 lg:order-2'}`}>
+										<div class="flex items-center gap-4 mb-6">
+											<span class="font-label text-[0.65rem] uppercase tracking-widest bg-primary text-on-primary px-3 py-1 rounded-full">{tag}</span>
+											{/* Display views if present in frontmatter */}
+											{(post.data as any).views !== undefined && (
+												<span class="font-label text-[0.65rem] uppercase tracking-widest text-secondary flex items-center gap-1">
+													<span class="material-symbols-outlined text-[0.8rem]">visibility</span> {(post.data as any).views} Views
+												</span>
+											)}
+										</div>
+										<a href={`/blog/${post.id}/`} class="no-underline">
+											<h3 class="font-headline text-3xl md:text-4xl font-extrabold tracking-tight text-on-background mb-6 leading-tight hover:text-primary transition-colors cursor-pointer line-clamp-3">
+												{post.data.title}
+											</h3>
+										</a>
+										<p class="text-on-surface-variant text-lg leading-relaxed mb-8 line-clamp-4">
+											{post.data.description}
+										</p>
+										<a class="inline-flex items-center gap-2 font-headline font-bold text-primary group no-underline" href={`/blog/${post.id}/`}>
+											Read Perspective
+											<span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
+										</a>
+									</div>
 								</div>
-								<a href={`/blog/${featuredPost.id}/`} class="no-underline">
-									<h2 class="font-headline text-3xl md:text-4xl font-extrabold tracking-tight text-on-background mb-6 leading-tight hover:text-primary transition-colors cursor-pointer">
-										{featuredPost.data.title}
-									</h2>
-								</a>
-								<p class="text-on-surface-variant leading-relaxed mb-8">
-									{featuredPost.data.description}
-								</p>
-								<a class="inline-flex items-center gap-2 font-headline font-bold text-primary group no-underline" href={`/blog/${featuredPost.id}/`}>
-									Full Analysis 
-									<span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
-								</a>
-							</div>
+							)})}
 						</div>
 					</div>
 				</section>
