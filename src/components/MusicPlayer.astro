@@ -55,6 +55,12 @@ const playlists = [
     }
     toggleBtn.setAttribute('data-initialized', 'true');
 
+    // Bulletproof state sync for full page reloads via localStorage
+    const savedName = localStorage.getItem('music-player-name');
+    if (savedName && currentNameLabel && currentNameLabel.innerText !== savedName) {
+      currentNameLabel.innerText = savedName;
+    }
+
     // Toggle dropdown UI
     dropdownBtn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -92,7 +98,10 @@ const playlists = [
           const url = target.dataset.url;
           const name = target.dataset.name;
           
-          if (currentNameLabel && name) currentNameLabel.innerText = name;
+          if (currentNameLabel && name) {
+            currentNameLabel.innerText = name;
+            localStorage.setItem('music-player-name', name);
+          }
           dropdownMenu.classList.add('hidden');
           dropdownMenu.classList.remove('flex');
 
