@@ -1,10 +1,11 @@
 ---
 const playlists = [
-  { name: 'Lofi Chill', url: 'https://soundcloud.com/lofi_chill/sets/lofi-chill' }
+  { name: 'Lofi Chill', url: 'https://soundcloud.com/lofi_chill/sets/lofi-chill' },
+  { name: 'Synthwave Night', url: 'https://soundcloud.com/newretrowave/sets/newretrowave-mixes' }
 ];
 ---
 
-<div id="global-music-player" transition:persist="music-player" class="fixed bottom-6 right-6 z-[100] bg-surface-container-highest/80 dark:bg-slate-800/80 backdrop-blur-xl px-2 py-2 rounded-full shadow-lg border border-outline/10 flex items-center gap-2 max-w-[240px]">
+<div id="global-music-player" transition:persist="music-player" class="fixed bottom-6 right-6 z-[100] bg-surface-container-highest/80 dark:bg-slate-800/80 backdrop-blur-xl px-2 py-2 rounded-full shadow-lg border border-outline/10 flex items-center gap-2 max-w-[240px] font-body">
   
   <!-- Headless SoundCloud Widget -->
   <iframe id="sc-widget" class="fixed -bottom-full opacity-0 pointer-events-none w-1 h-1" allow="autoplay"
@@ -15,27 +16,24 @@ const playlists = [
     <span class="material-symbols-outlined text-xl" id="music-icon">play_arrow</span>
   </button>
   
-  <div class="flex-1 min-w-0 pr-2">
-    <select id="music-playlist-select" class="w-full bg-transparent text-xs font-headline font-bold text-on-surface uppercase tracking-widest outline-none border-none cursor-pointer truncate custom-select appearance-none">
+  <!-- Custom Drop Up Menu -->
+  <div class="relative flex-1 min-w-0 pr-4">
+    <button id="playlist-dropdown-btn" class="w-full text-left bg-transparent text-sm text-on-surface outline-none border-none cursor-pointer truncate flex items-center justify-between gap-1 group">
+      <span id="current-playlist-name" class="truncate">{playlists[0].name}</span>
+      <span class="material-symbols-outlined text-sm text-secondary group-hover:text-primary transition-colors">expand_less</span>
+    </button>
+    
+    <ul id="playlist-dropdown-menu" class="absolute bottom-full right-0 mb-4 w-48 bg-surface-container-highest/90 dark:bg-slate-800/90 backdrop-blur-xl rounded-xl shadow-lg border border-outline/10 hidden flex-col overflow-hidden transition-all origin-bottom z-50">
       {playlists.map(p => (
-        <option value={p.url}>{p.name}</option>
+        <li>
+          <button class="playlist-option w-full text-left px-4 py-3 text-sm text-on-surface hover:bg-primary/10 hover:text-primary transition-colors truncate" data-url={p.url} data-name={p.name}>
+            {p.name}
+          </button>
+        </li>
       ))}
-    </select>
+    </ul>
   </div>
 </div>
-
-<style>
-  .custom-select {
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22currentColor%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E");
-    background-repeat: no-repeat;
-    background-position: right 2px center;
-    background-size: 12px;
-    padding-right: 16px;
-  }
-</style>
 
 <!-- Load the SC Widget API globally -->
 <script is:inline src="https://w.soundcloud.com/player/api.js"></script>
@@ -43,23 +41,39 @@ const playlists = [
 <script>
   document.addEventListener('astro:page-load', () => {
     const toggleBtn = document.getElementById('music-toggle');
-    const select = document.getElementById('music-playlist-select');
+    const dropdownBtn = document.getElementById('playlist-dropdown-btn');
+    const dropdownMenu = document.getElementById('playlist-dropdown-menu');
+    const currentNameLabel = document.getElementById('current-playlist-name');
     const icon = document.getElementById('music-icon');
     const iframeElement = document.getElementById('sc-widget');
+    const playlistOptions = document.querySelectorAll('.playlist-option');
     
-    if (!toggleBtn || !select || !iframeElement) return;
+    if (!toggleBtn || !dropdownBtn || !dropdownMenu || !iframeElement) return;
 
-    // State preservation check for Astro SPA navigation
     if (toggleBtn.hasAttribute('data-initialized')) {
       return;
     }
     toggleBtn.setAttribute('data-initialized', 'true');
 
+    // Toggle dropdown UI
+    dropdownBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      dropdownMenu.classList.toggle('hidden');
+      dropdownMenu.classList.toggle('flex');
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!dropdownBtn.contains(e.target as Node) && !dropdownMenu.contains(e.target as Node)) {
+        dropdownMenu.classList.add('hidden');
+        dropdownMenu.classList.remove('flex');
+      }
+    });
+
     // Initialize SoundCloud Widget
     // @ts-ignore
     const widget = SC.Widget(iframeElement);
 
-    // Wait until widget is fully loaded before allowing play commands
     widget.bind(SC.Widget.Events.READY, () => {
       
       toggleBtn.addEventListener('click', () => {
@@ -72,10 +86,21 @@ const playlists = [
         });
       });
 
-      select.addEventListener('change', (e) => {
-        const url = (e.target as HTMLSelectElement).value;
-        widget.load(url, { auto_play: true });
-        if (icon) icon.innerText = 'pause';
+      playlistOptions.forEach(option => {
+        option.addEventListener('click', (e) => {
+          const target = e.currentTarget as HTMLElement;
+          const url = target.dataset.url;
+          const name = target.dataset.name;
+          
+          if (currentNameLabel && name) currentNameLabel.innerText = name;
+          dropdownMenu.classList.add('hidden');
+          dropdownMenu.classList.remove('flex');
+
+          if (url) {
+            widget.load(url, { auto_play: true });
+            if (icon) icon.innerText = 'pause';
+          }
+        });
       });
 
       widget.bind(SC.Widget.Events.PLAY, () => {
