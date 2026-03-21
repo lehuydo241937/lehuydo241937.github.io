@@ -16,6 +16,6 @@ git push origin main
 
 # 3. Build and Deploy
 Write-Host "Step 2: Building and deploying to gh-pages..." -ForegroundColor Yellow
-npm run deploy
+npm.cmd run deploy
 
 Write-Host "--- Process Complete! Your content should be live in a few minutes. ---" -ForegroundColor Green

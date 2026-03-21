@@ -20,18 +20,53 @@ const posts = (await getCollection('blog')).sort(
 		<Header />
 		<main class="pt-40 pb-20 px-6 lg:px-12 max-w-screen-2xl mx-auto">
 			<section class="max-w-screen-2xl mx-auto mb-32">
-				<div class="flex flex-col md:flex-row justify-between items-end mb-16">
+				<div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-8 mb-16">
 					<div>
 						<h1 class="font-headline text-5xl font-extrabold tracking-tight text-on-background mb-4">Blog</h1>
 						<p class="text-secondary max-w-md">Technical deep-dives and research notes on digital systems.</p>
 					</div>
+					
+					<!-- Unified Search & Filters -->
+					<div class="w-full md:w-auto flex flex-col gap-4">
+						<div class="relative group">
+							<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors">search</span>
+							<input 
+								type="text" 
+								id="search-input"
+								placeholder="Search content..."
+								class="w-full md:w-80 bg-surface-container-low border-2 border-transparent focus:border-primary px-12 py-3 rounded-full font-body text-sm outline-none transition-all placeholder:text-outline-variant"
+							/>
+						</div>
+						<div class="flex flex-wrap gap-2">
+							<select id="time-filter" class="bg-surface-container-low text-on-surface px-4 py-2 rounded-full font-label text-[0.7rem] uppercase tracking-wider outline-none border-none cursor-pointer hover:bg-surface-container transition-colors">
+								<option value="all">Any Time</option>
+								<option value="today">Today</option>
+								<option value="yesterday">Yesterday</option>
+								<option value="week">This Week</option>
+								<option value="month">This Month</option>
+							</select>
+							<select id="tag-filter" class="bg-surface-container-low text-on-surface px-4 py-2 rounded-full font-label text-[0.7rem] uppercase tracking-wider outline-none border-none cursor-pointer hover:bg-surface-container transition-colors">
+								<option value="all">All Tags</option>
+								{[...new Set(posts.flatMap(p => p.data.tags))].sort().map(tag => (
+									<option value={tag}>{tag}</option>
+								))}
+							</select>
+						</div>
+					</div>
 				</div>
-				<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-16 gap-x-12">
+
+				<div id="posts-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-16 gap-x-12 min-h-[400px]">
 					{
 						posts.map((post) => (
-							<article class="group">
+							<article 
+								class="group post-card" 
+								data-title={post.data.title.toLowerCase()}
+								data-description={post.data.description.toLowerCase()}
+								data-tags={post.data.tags.join(',').toLowerCase()}
+								data-pubdate={post.data.pubDate.toISOString()}
+							>
 								<a href={`/blog/${post.id}/`} class="no-underline">
-									<div class="aspect-[4/5] bg-surface-container overflow-hidden rounded-lg mb-8">
+									<div class="aspect-[16/9] bg-surface-container overflow-hidden rounded-lg mb-8">
 										{post.data.heroImage && (
 											<img 
 												src={post.data.heroImage?.src || post.data.heroImage} 
@@ -57,8 +92,92 @@ const posts = (await getCollection('blog')).sort(
 						))
 					}
 				</div>
+				
+				<!-- Empty State -->
+				<div id="empty-state" class="hidden flex-col items-center justify-center py-32 text-center">
+					<span class="material-symbols-outlined text-6xl text-outline-variant mb-4">search_off</span>
+					<p class="text-secondary font-headline text-xl">No insights found matching your criteria.</p>
+					<button id="reset-filters" class="mt-8 text-primary font-label text-xs uppercase tracking-[0.2em] font-bold hover:underline">Clear all filters</button>
+				</div>
 			</section>
 		</main>
+
+		<script>
+			const searchInput = document.getElementById('search-input');
+			const tagFilter = document.getElementById('tag-filter');
+			const timeFilter = document.getElementById('time-filter');
+			const postsGrid = document.getElementById('posts-grid');
+			const emptyState = document.getElementById('empty-state');
+			const resetBtn = document.getElementById('reset-filters');
+			const postCards = document.querySelectorAll('.post-card');
+
+			function filterPosts() {
+				const searchTerm = searchInput.value.toLowerCase();
+				const selectedTag = tagFilter.value;
+				const selectedTime = timeFilter.value;
+				const now = new Date();
+				
+				let visibleCount = 0;
+
+				postCards.forEach(card => {
+					const title = card.dataset.title;
+					const description = card.dataset.description;
+					const tags = card.dataset.tags.split(',');
+					const pubDate = new Date(card.dataset.pubdate);
+					
+					// Search match
+					const matchesSearch = title.includes(searchTerm) || description.includes(searchTerm);
+					
+					// Tag match
+					const matchesTag = selectedTag === 'all' || tags.includes(selectedTag);
+					
+					// Time match
+					let matchesTime = true;
+					if (selectedTime !== 'all') {
+						const diffMs = now.getTime() - pubDate.getTime();
+						const diffDays = diffMs / (1000 * 60 * 60 * 24);
+						
+						if (selectedTime === 'today') {
+							matchesTime = pubDate.toDateString() === now.toDateString();
+						} else if (selectedTime === 'yesterday') {
+							const yesterday = new Date(now);
+							yesterday.setDate(now.getDate() - 1);
+							matchesTime = pubDate.toDateString() === yesterday.toDateString();
+						} else if (selectedTime === 'week') {
+							matchesTime = diffDays <= 7;
+						} else if (selectedTime === 'month') {
+							matchesTime = diffDays <= 30;
+						}
+					}
+					
+					if (matchesSearch && matchesTag && matchesTime) {
+						card.style.display = 'block';
+						visibleCount++;
+					} else {
+						card.style.display = 'none';
+					}
+				});
+
+				if (visibleCount === 0) {
+					postsGrid.classList.add('hidden');
+					emptyState.classList.remove('hidden');
+				} else {
+					postsGrid.classList.remove('hidden');
+					emptyState.classList.add('hidden');
+				}
+			}
+
+			searchInput.addEventListener('input', filterPosts);
+			tagFilter.addEventListener('change', filterPosts);
+			timeFilter.addEventListener('change', filterPosts);
+			
+			resetBtn.addEventListener('click', () => {
+				searchInput.value = '';
+				tagFilter.value = 'all';
+				timeFilter.value = 'all';
+				filterPosts();
+			});
+		</script>
 		<Footer />
 	</body>
 </html>

@@ -27,3 +27,4 @@ pnpm-debug.log*
 chat hist/
 .github/
 .vscode/
+.agents/

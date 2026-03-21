@@ -37,7 +37,7 @@ const recentPosts = blogPosts.slice(1, 4);
 							<a href="/blog" class="bg-primary text-on-primary px-8 py-4 font-headline font-bold rounded-DEFAULT hover:opacity-90 transition-all no-underline">
 								Read Latest Analysis
 							</a>
-							<a class="text-on-surface font-headline font-bold border-b-2 border-primary pb-1 hover:text-primary transition-colors no-underline" href="/articles">
+							<a class="text-on-surface font-headline font-bold border-b-2 border-primary pb-1 hover:text-primary transition-colors no-underline" href="/blog">
 								Explore Archive
 							</a>
 						</div>
@@ -97,13 +97,14 @@ const recentPosts = blogPosts.slice(1, 4);
 					</div>
 					<div class="hidden md:flex gap-8 font-label text-[0.7rem] uppercase tracking-widest text-secondary">
 						<a href="/blog" class="hover:text-primary transition-colors no-underline">All Projects</a>
+						<a href="/blog/articles" class="hover:text-primary transition-colors no-underline">All Projects</a>
 					</div>
 				</div>
 				<div class="grid grid-cols-1 md:grid-cols-3 gap-y-16 gap-x-12">
 					{recentPosts.map((post) => (
 						<article class="group">
 							<a href={`/blog/${post.id}/`} class="no-underline">
-								<div class="aspect-[4/5] bg-surface-container overflow-hidden rounded-lg mb-8">
+								<div class="aspect-[16/9] bg-surface-container overflow-hidden rounded-lg mb-8">
 									{post.data.heroImage && (
 										<img 
 											src={post.data.heroImage?.src || post.data.heroImage} 
