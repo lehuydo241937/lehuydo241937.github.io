@@ -1,21 +1,15 @@
 ---
-// To use your own MP3 files:
-// 1. Create a folder called 'audio' inside your 'public' folder.
-// 2. Drag your .mp3 files into the new 'public/audio' folder.
-// 3. Update the URLs below to match (e.g., id: '/audio/my-song.mp3')
-
 const playlists = [
-  { name: 'SoundHelix 1', id: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3' },
-  { name: 'SoundHelix 2', id: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3' },
-  { name: 'SoundHelix 3', id: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3' }
+  { name: 'Lofi Chill', url: 'https://soundcloud.com/lofi_chill/sets/lofi-chill' }
 ];
 ---
 
 <div id="global-music-player" transition:persist="music-player" class="fixed bottom-6 right-6 z-[100] bg-surface-container-highest/80 dark:bg-slate-800/80 backdrop-blur-xl px-2 py-2 rounded-full shadow-lg border border-outline/10 flex items-center gap-2 max-w-[240px]">
   
-  <audio id="local-audio-player" loop preload="none">
-    <source src={playlists[0].id} type="audio/mpeg">
-  </audio>
+  <!-- Headless SoundCloud Widget -->
+  <iframe id="sc-widget" class="fixed -bottom-full opacity-0 pointer-events-none w-1 h-1" allow="autoplay"
+          src={`https://w.soundcloud.com/player/?url=${encodeURIComponent(playlists[0].url)}&auto_play=false&hide_related=true&show_comments=false&show_user=false&show_reposts=false&visual=false`}>
+  </iframe>
 
   <button id="music-toggle" class="text-on-surface hover:text-primary transition-colors flex items-center justify-center w-10 h-10 rounded-full bg-background/50 hover:bg-background shrink-0">
     <span class="material-symbols-outlined text-xl" id="music-icon">play_arrow</span>
@@ -24,7 +18,7 @@ const playlists = [
   <div class="flex-1 min-w-0 pr-2">
     <select id="music-playlist-select" class="w-full bg-transparent text-xs font-headline font-bold text-on-surface uppercase tracking-widest outline-none border-none cursor-pointer truncate custom-select appearance-none">
       {playlists.map(p => (
-        <option value={p.id}>{p.name}</option>
+        <option value={p.url}>{p.name}</option>
       ))}
     </select>
   </div>
@@ -43,50 +37,58 @@ const playlists = [
   }
 </style>
 
+<!-- Load the SC Widget API globally -->
+<script is:inline src="https://w.soundcloud.com/player/api.js"></script>
+
 <script>
   document.addEventListener('astro:page-load', () => {
     const toggleBtn = document.getElementById('music-toggle');
     const select = document.getElementById('music-playlist-select');
     const icon = document.getElementById('music-icon');
-    const audio = document.getElementById('local-audio-player');
+    const iframeElement = document.getElementById('sc-widget');
     
-    if (!toggleBtn || !select || !audio) return;
+    if (!toggleBtn || !select || !iframeElement) return;
 
+    // State preservation check for Astro SPA navigation
     if (toggleBtn.hasAttribute('data-initialized')) {
-      // Sync the icon state in case View Transitions resets the UI DOM but the audio element kept playing
-      if (icon) {
-        icon.innerText = !audio.paused ? 'pause' : 'play_arrow';
-      }
       return;
     }
-    
     toggleBtn.setAttribute('data-initialized', 'true');
 
-    toggleBtn.addEventListener('click', () => {
-      if (audio.paused) {
-        audio.play().catch(e => console.error("Playback failed:", e));
-      } else {
-        audio.pause();
-      }
-    });
+    // Initialize SoundCloud Widget
+    // @ts-ignore
+    const widget = SC.Widget(iframeElement);
 
-    select.addEventListener('change', (e) => {
-      const audioUrl = e.target.value;
-      audio.src = audioUrl;
-      audio.load();
-      // Auto-play next track if we were already playing
-      if (icon?.innerText === 'pause') {
-        audio.play().catch(e => console.error("Playback failed:", e));
-      }
-    });
+    // Wait until widget is fully loaded before allowing play commands
+    widget.bind(SC.Widget.Events.READY, () => {
+      
+      toggleBtn.addEventListener('click', () => {
+        widget.isPaused((paused: boolean) => {
+          if (paused) {
+            widget.play();
+          } else {
+            widget.pause();
+          }
+        });
+      });
 
-    // Automatically update UI icon based on strictly native audio state logic
-    audio.addEventListener('play', () => {
-      if (icon) icon.innerText = 'pause';
-    });
+      select.addEventListener('change', (e) => {
+        const url = (e.target as HTMLSelectElement).value;
+        widget.load(url, { auto_play: true });
+        if (icon) icon.innerText = 'pause';
+      });
 
-    audio.addEventListener('pause', () => {
-      if (icon) icon.innerText = 'play_arrow';
+      widget.bind(SC.Widget.Events.PLAY, () => {
+        if (icon) icon.innerText = 'pause';
+      });
+
+      widget.bind(SC.Widget.Events.PAUSE, () => {
+        if (icon) icon.innerText = 'play_arrow';
+      });
+      
+      widget.bind(SC.Widget.Events.FINISH, () => {
+        if (icon) icon.innerText = 'play_arrow';
+      });
     });
   });
 </script>
