@@ -61,33 +61,45 @@ const recentPosts = blogPosts.slice(0, 3);
 			{topPostsByTag.length > 0 && (
 				<section class="bg-surface-container-low py-20 mb-20 md:mb-32 overflow-hidden">
 					<div class="max-w-screen-2xl mx-auto px-6 md:px-12">
-						<div class="mb-20 text-center">
-							<span class="font-label text-xs uppercase tracking-[0.2em] text-secondary mb-4 block">Essential Reading</span>
-							<h2 class="font-headline text-3xl md:text-5xl font-extrabold tracking-tight text-on-background">Most Viewed by Category</h2>
+						<div class="flex items-end justify-between mb-16">
+							<div>
+								<span class="font-label text-xs uppercase tracking-[0.2em] text-secondary mb-4 block">Essential Reading</span>
+								<h2 class="font-headline text-3xl md:text-5xl font-extrabold tracking-tight text-on-background">Top View of Topic</h2>
+							</div>
+							<div class="flex items-center gap-3">
+								<div id="tag-dots" class="hidden md:flex items-center gap-2 mr-4">
+									{topPostsByTag.map((_, i) => (
+										<button class="tag-dot w-2 h-2 rounded-full bg-outline/40 transition-all duration-300 hover:bg-primary" data-index={i}></button>
+									))}
+								</div>
+								<button id="tag-prev" class="flex items-center justify-center w-12 h-12 rounded-full border border-outline/20 bg-background/50 hover:bg-primary hover:text-on-primary hover:border-primary transition-all duration-300 text-on-surface">
+									<span class="material-symbols-outlined">arrow_back</span>
+								</button>
+								<button id="tag-next" class="flex items-center justify-center w-12 h-12 rounded-full border border-outline/20 bg-background/50 hover:bg-primary hover:text-on-primary hover:border-primary transition-all duration-300 text-on-surface">
+									<span class="material-symbols-outlined">arrow_forward</span>
+								</button>
+							</div>
 						</div>
 						
-						<div class="flex flex-col gap-32">
-							{topPostsByTag.map(({ tag, post }, index) => {
-								const isEven = index % 2 !== 0;
-								return (
-								<div class="editorial-grid items-center relative">
-									<div class={`col-span-12 lg:col-span-7 relative group cursor-pointer ${isEven ? 'lg:order-2' : 'lg:order-1'}`}>
+						<div id="tag-slides-container" class="relative">
+							{topPostsByTag.map(({ tag, post }, index) => (
+								<div class={`tag-slide editorial-grid items-center ${index === 0 ? '' : 'hidden'}`} data-index={index}>
+									<div class="col-span-12 lg:col-span-7 relative group cursor-pointer">
 										<a href={`/blog/${post.id}/`}>
 											<div class="aspect-[16/9] overflow-hidden rounded-lg bg-surface-container shadow-2xl">
 												{post.data.heroImage && (
-													<img 
-														src={post.data.heroImage?.src || post.data.heroImage} 
-														alt={post.data.title} 
-														class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
+													<img
+														src={post.data.heroImage?.src || post.data.heroImage}
+														alt={post.data.title}
+														class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
 													/>
 												)}
 											</div>
 										</a>
 									</div>
-									<div class={`col-span-12 lg:col-span-5 mt-10 lg:mt-0 ${isEven ? 'lg:pr-12 lg:order-1' : 'lg:pl-12 lg:order-2'}`}>
+									<div class="col-span-12 lg:col-span-5 lg:pl-12 mt-10 lg:mt-0">
 										<div class="flex items-center gap-4 mb-6">
 											<span class="font-label text-[0.65rem] uppercase tracking-widest bg-primary text-on-primary px-3 py-1 rounded-full">{tag}</span>
-											{/* Display views if present in frontmatter */}
 											{(post.data as any).views !== undefined && (
 												<span class="font-label text-[0.65rem] uppercase tracking-widest text-secondary flex items-center gap-1">
 													<span class="material-symbols-outlined text-[0.8rem]">visibility</span> {(post.data as any).views} Views
@@ -108,7 +120,7 @@ const recentPosts = blogPosts.slice(0, 3);
 										</a>
 									</div>
 								</div>
-							)})}
+							))}
 						</div>
 					</div>
 				</section>
@@ -155,5 +167,36 @@ const recentPosts = blogPosts.slice(0, 3);
 		</main>
 		<Footer />
 		<MusicPlayer />
+		<script>
+		  document.addEventListener('astro:page-load', () => {
+		    const slides = document.querySelectorAll<HTMLElement>('.tag-slide');
+		    const dots = document.querySelectorAll<HTMLElement>('.tag-dot');
+		    const prevBtn = document.getElementById('tag-prev');
+		    const nextBtn = document.getElementById('tag-next');
+		    if (!slides.length || !prevBtn || !nextBtn) return;
+
+		    let current = 0;
+
+		    const goTo = (index: number) => {
+		      slides[current].classList.add('hidden');
+		      dots[current]?.classList.remove('bg-primary', 'w-4');
+		      dots[current]?.classList.add('bg-outline/40');
+		      current = (index + slides.length) % slides.length;
+		      slides[current].classList.remove('hidden');
+		      dots[current]?.classList.add('bg-primary', 'w-4');
+		      dots[current]?.classList.remove('bg-outline/40');
+		    };
+
+		    // Init first dot as active
+		    dots[0]?.classList.add('bg-primary', 'w-4');
+		    dots[0]?.classList.remove('bg-outline/40');
+
+		    prevBtn.addEventListener('click', () => goTo(current - 1));
+		    nextBtn.addEventListener('click', () => goTo(current + 1));
+		    dots.forEach(dot => {
+		      dot.addEventListener('click', () => goTo(Number(dot.dataset.index)));
+		    });
+		  });
+		</script>
 	</body>
 </html>
