@@ -1,12 +1,21 @@
 ---
+// To use your own MP3 files:
+// 1. Create a folder called 'audio' inside your 'public' folder.
+// 2. Drag your .mp3 files into the new 'public/audio' folder.
+// 3. Update the URLs below to match (e.g., id: '/audio/my-song.mp3')
+
 const playlists = [
-  { name: 'Lofi Girl', id: 'PL6NdkXsPL07KN01gH2vucrHCEyyNmVEx4' },
-  { name: 'Soft Vibes', id: 'PLIRoL0z5qq_sp9TUq02geJSUMHU0AVXEF' }
+  { name: 'SoundHelix 1', id: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3' },
+  { name: 'SoundHelix 2', id: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3' },
+  { name: 'SoundHelix 3', id: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3' }
 ];
 ---
 
 <div id="global-music-player" transition:persist="music-player" class="fixed bottom-6 right-6 z-[100] bg-surface-container-highest/80 dark:bg-slate-800/80 backdrop-blur-xl px-2 py-2 rounded-full shadow-lg border border-outline/10 flex items-center gap-2 max-w-[240px]">
-  <div id="youtube-player" class="fixed -bottom-full opacity-0 pointer-events-none w-1 h-1"></div>
+  
+  <audio id="local-audio-player" loop preload="none">
+    <source src={playlists[0].id} type="audio/mpeg">
+  </audio>
 
   <button id="music-toggle" class="text-on-surface hover:text-primary transition-colors flex items-center justify-center w-10 h-10 rounded-full bg-background/50 hover:bg-background shrink-0">
     <span class="material-symbols-outlined text-xl" id="music-icon">play_arrow</span>
@@ -34,106 +43,50 @@ const playlists = [
   }
 </style>
 
-<script is:inline>
-  // Expose youtube callback to global scope so it's only defined once
-  if (!window.onYouTubeIframeAPIReady) {
-    window.onYouTubeIframeAPIReady = function() {
-      // Set flag so we know it loaded
-      window.isYTReady = true;
-      // Dispatch an event so any component instances can attach
-      window.dispatchEvent(new Event('yt-api-ready'));
-    };
-
-    const tag = document.createElement('script');
-    tag.src = "https://www.youtube.com/iframe_api";
-    const firstScriptTag = document.getElementsByTagName('script')[0];
-    if (firstScriptTag && firstScriptTag.parentNode) {
-      firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-    } else {
-      document.head.appendChild(tag);
-    }
-  }
-</script>
-
 <script>
-  // Standard module script (Astro executes this once across view transitions, but we hook into astro:page-load)
   document.addEventListener('astro:page-load', () => {
     const toggleBtn = document.getElementById('music-toggle');
     const select = document.getElementById('music-playlist-select');
     const icon = document.getElementById('music-icon');
-    const playerContainer = document.getElementById('youtube-player');
+    const audio = document.getElementById('local-audio-player');
     
-    if (!toggleBtn || !select || !playerContainer) return;
+    if (!toggleBtn || !select || !audio) return;
 
-    // Prevent re-initialization if the iframe inside playerContainer already exists (due to transition:persist)
-    // The playerContainer div gets replaced by an iframe by the YT API.
-    if (playerContainer.tagName.toLowerCase() === 'iframe') {
-      return; 
+    if (toggleBtn.hasAttribute('data-initialized')) {
+      // Sync the icon state in case View Transitions resets the UI DOM but the audio element kept playing
+      if (icon) {
+        icon.innerText = !audio.paused ? 'pause' : 'play_arrow';
+      }
+      return;
     }
-
-    if (toggleBtn.hasAttribute('data-initialized')) return;
+    
     toggleBtn.setAttribute('data-initialized', 'true');
-    
-    let player;
-    let isPlaying = false;
 
-    const initPlayer = () => {
-      if (typeof window.YT === 'undefined' || !window.YT.Player) return;
-      
-      const initialPlaylist = select.value;
-      
-      player = new window.YT.Player('youtube-player', {
-        height: '1',
-        width: '1',
-        playerVars: {
-          listType: 'playlist',
-          list: initialPlaylist,
-          loop: 1,
-          autoplay: 0,
-          controls: 0,
-          disablekb: 1,
-          fs: 0,
-          modestbranding: 1,
-          rel: 0,
-          showinfo: 0,
-          iv_load_policy: 3
-        },
-        events: {
-          'onStateChange': (event) => {
-            if (event.data === window.YT.PlayerState.PLAYING) {
-              isPlaying = true;
-              if (icon) icon.innerText = 'pause';
-            } else if (event.data === window.YT.PlayerState.PAUSED || event.data === window.YT.PlayerState.ENDED) {
-              isPlaying = false;
-              if (icon) icon.innerText = 'play_arrow';
-            }
-          }
-        }
-      });
+    toggleBtn.addEventListener('click', () => {
+      if (audio.paused) {
+        audio.play().catch(e => console.error("Playback failed:", e));
+      } else {
+        audio.pause();
+      }
+    });
 
-      toggleBtn.addEventListener('click', () => {
-        if (!player || typeof player.playVideo !== 'function') return;
-        if (isPlaying) {
-          player.pauseVideo();
-        } else {
-          player.playVideo();
-        }
-      });
+    select.addEventListener('change', (e) => {
+      const audioUrl = e.target.value;
+      audio.src = audioUrl;
+      audio.load();
+      // Auto-play next track if we were already playing
+      if (icon?.innerText === 'pause') {
+        audio.play().catch(e => console.error("Playback failed:", e));
+      }
+    });
 
-      select.addEventListener('change', (e) => {
-        if (!player || typeof player.loadPlaylist !== 'function') return;
-        const playlistId = e.target.value;
-        player.loadPlaylist({
-          list: playlistId,
-          listType: 'playlist'
-        });
-      });
-    };
+    // Automatically update UI icon based on strictly native audio state logic
+    audio.addEventListener('play', () => {
+      if (icon) icon.innerText = 'pause';
+    });
 
-    if (window.isYTReady && typeof window.YT !== 'undefined') {
-      initPlayer();
-    } else {
-      window.addEventListener('yt-api-ready', initPlayer);
-    }
+    audio.addEventListener('pause', () => {
+      if (icon) icon.innerText = 'play_arrow';
+    });
   });
 </script>
