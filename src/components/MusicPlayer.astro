@@ -7,7 +7,7 @@ const playlists = [
 ---
 
 <div id="global-music-player" transition:persist="music-player" class="fixed bottom-6 right-6 z-[100] bg-surface-container-highest/80 dark:bg-slate-800/80 backdrop-blur-xl px-2 py-2 rounded-full shadow-lg border border-outline/10 flex items-center gap-2 max-w-[240px]">
-  <div id="youtube-player" class="hidden w-0 h-0"></div>
+  <div id="youtube-player" class="fixed -bottom-full opacity-0 pointer-events-none w-1 h-1"></div>
 
   <button id="music-toggle" class="text-on-surface hover:text-primary transition-colors flex items-center justify-center w-10 h-10 rounded-full bg-background/50 hover:bg-background shrink-0">
     <span class="material-symbols-outlined text-xl" id="music-icon">play_arrow</span>
@@ -84,8 +84,8 @@ const playlists = [
       const initialPlaylist = select.value;
       
       player = new window.YT.Player('youtube-player', {
-        height: '0',
-        width: '0',
+        height: '1',
+        width: '1',
         playerVars: {
           listType: 'playlist',
           list: initialPlaylist,
